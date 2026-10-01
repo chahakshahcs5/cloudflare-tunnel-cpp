@@ -58,9 +58,51 @@ jobs:
           name: ${{ matrix.os }}
           path: dist/*
 
+  build-android:
+    name: Build Android (arm64-v8a)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26c
+
+      - name: Configure Android Build
+        run: |
+          cmake -B build-android -S . -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-26 \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Android CLI
+        run: |
+          ninja -C build-android cloudflared_cli
+
+      - name: Strip Symbols
+        run: |
+          $ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip --strip-all build-android/cloudflared-cli
+
+      - name: Stage Android Artifact
+        run: |
+          mkdir -p dist
+          cp build-android/cloudflared-cli dist/cloudflared-cli-android-arm64
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-arm64
+          path: dist/*
+
   publish:
     name: Publish GitHub Release
-    needs: build-cli
+    needs: [build-cli, build-android]
     runs-on: ubuntu-latest
     steps:
       - name: Download staged artifacts

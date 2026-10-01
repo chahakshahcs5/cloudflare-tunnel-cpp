@@ -2,7 +2,7 @@
 
 [![C++ Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B20)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android-lightgrey.svg)]()
 [![Security](https://img.shields.io/badge/security-SHA256%20Verified-success.svg)]()
 
 A standalone, production-quality modern C++ (C++20) library and CLI that makes it extremely easy for any C++ application to expose a local HTTP server or service through **Cloudflare Tunnel using `cloudflared`**.
@@ -12,7 +12,7 @@ It completely abstracts `cloudflared` from the consuming developer:
 - **Strict security**: Every binary download is verified against official pinned SHA256 checksums before execution.
 - **Automatic process lifecycle**: Asynchronous stream readers, public URL detection, and signal/atexit handlers preventing orphaned zombie processes.
 - **Idempotent shutdown**: Clean, safe, repeatable `close()` calls via RAII.
-- **Cross-platform**: Windows (WinHTTP, zero external dependencies), Linux (libcurl), and macOS.
+- **Cross-platform**: Windows (WinHTTP, zero external dependencies), Linux (libcurl), macOS, and Android (NDK native / Termux / Android curl).
 
 ---
 
@@ -118,6 +118,9 @@ The library pins official Cloudflare release **`2026.8.3`** with hardcoded crypt
 | **Linux** | x64 (amd64) | `cloudflared-linux-amd64` | `f29324fe934d1e100617484c78deef803c4dc2cd351d645bbde42e96b4fccc5e` |
 | **Linux** | arm64 | `cloudflared-linux-arm64` | `4bcfd35521a7cbc545ebfd5d57334a71ee180e2a64874981f374c81472118391` |
 | **Linux** | arm | `cloudflared-linux-arm` | `7a7cac4ad4561ff55797eaf27aae1a0be37498c85502715bc87e3bad919d928c` |
+| **Android** | arm64 (v8a) | `cloudflared-android-arm64.so` | `f97fb6c074cb3b8e7a2104211c99fb617afed4439719415a03763a50501b4c32` |
+| **Android** | arm (v7a) | `cloudflared-android-arm.so` | `e4ec9ee4c5c3b33b66d30137130c0735654ed675d9eca4f644e8de94e8b97970` |
+| **Android** | x64 (x86_64) | `cloudflared-android-amd64.so` | `fdff7f4dea3ce1f66877d692b40ff74c676bc2bf5d15fa2f3d622dc388a17d10` |
 | **macOS** | x64 (amd64) | `cloudflared-darwin-amd64.tgz` | `936aa4ed783b0e191fac48e7140c34605b25d8d5c0495c3599c90e350ae6e4c4` |
 | **macOS** | arm64 | `cloudflared-darwin-arm64.tgz` | `50a04624531e7a98ddb65f1223905e32f84e7488ed3ee8dadcd3260aa8932603` |
 
