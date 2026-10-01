@@ -52,36 +52,33 @@ The developer does **NOT** need to:
 
 ## Architecture
 
-```text
-Consumer C++ Application
-            │
-            │ cloudflared::create_tunnel(...)
-            ▼
-┌───────────────────────────────────────────────┐
-│              libcloudflared                   │
-│                                               │
-│  Tunnel API (create_tunnel, Tunnel)           │
-│       │                                       │
-│       ▼                                       │
-│  Binary Manager                               │
-│       │                                       │
-│       ├── Platform Resolver (OS & Arch)       │
-│       ├── Cache Directory (%LOCALAPPDATA% etc)│
-│       ├── Release Manifest (Pinned v2026.8.3) │
-│       ├── Streaming Downloader                │
-│       ├── SHA256 Checksum Verifier            │
-│       └── Concurrency Guard (Thread-Safe)     │
-│                                               │
-│  Process Manager (Async I/O, Exit Watcher)   │
-│  Output Parser (URL & Connection Regexes)    │
-│  Signal & Atexit Cleanup Registry            │
-└───────────────────────┬───────────────────────┘
-                        │
-                        ▼
-                 cloudflared binary
-                        │
-                        ▼
-                Public HTTPS URL
+```mermaid
+flowchart TD
+    App["Consumer C++ Application"]
+
+    App -->|"cloudflared::create_tunnel(options)"| TunnelAPI["libcloudflared::Tunnel API"]
+
+    subgraph Lib["libcloudflared Lifecycle Engine"]
+        direction TB
+        TunnelAPI --> BinMgr["Binary Manager"]
+
+        subgraph Resolution["Resolution & Verification"]
+            direction LR
+            Platform["Platform Resolver<br/>(OS & Architecture)"]
+            Cache["Cache Resolver<br/>(%LOCALAPPDATA% / ~/.cache)"]
+            Manifest["Release Manifest<br/>(Pinned Checksums)"]
+            Downloader["HTTP Downloader<br/>(WinHTTP / libcurl)"]
+            Verifier["SHA-256 Verifier<br/>(Cryptographic Check)"]
+        end
+
+        BinMgr --> Resolution
+        Resolution --> ProcessMgr["Process Manager<br/>(Async I/O & Exit Watcher)"]
+        ProcessMgr --> Parser["Output Parser<br/>(Regex URL Extraction)"]
+        ProcessMgr --> Cleanup["Signal & atexit Registry<br/>(Zero Zombie Processes)"]
+    end
+
+    Lib -->|"Spawns Process"| Binary["Official cloudflared Binary"]
+    Binary -->|"Establishes Tunnel"| URL["Public HTTPS URL<br/>(https://*.trycloudflare.com)"]
 ```
 
 ---
