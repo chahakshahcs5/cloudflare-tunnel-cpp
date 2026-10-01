@@ -1,0 +1,82 @@
+name: Release Cloudflare Tunnel CLI
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-cli:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            bin_source: build/Release/cloudflared-cli.exe
+            bin_dest: cloudflared-cli-windows-x64.exe
+          - os: ubuntu-24.04
+            bin_source: build/cloudflared-cli
+            bin_dest: cloudflared-cli-linux-x64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Strip Debug Symbols (Linux)
+        if: runner.os == 'Linux'
+        run: strip --strip-all build/cloudflared-cli
+
+      - name: Stage Artifact
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp ${{ matrix.bin_source }} dist/${{ matrix.bin_dest }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}
+          path: dist/*
+
+  publish:
+    name: Publish GitHub Release
+    needs: build-cli
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download staged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-files
+          merge-multiple: true
+
+      - name: Generate Checksums
+        run: |
+          cd release-files
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          generate_release_notes: true
